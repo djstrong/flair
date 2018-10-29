@@ -133,9 +133,13 @@ class StackedEmbeddings(TokenEmbeddings):
 class WordEmbeddings(TokenEmbeddings):
     """Standard static word embeddings, such as GloVe or FastText."""
 
-    def __init__(self, embeddings):
-        """Init one of: 'glove', 'extvec', 'ft-crawl', 'ft-german'.
-        Constructor downloads required files if not there."""
+    def __init__(self, embeddings, embeddings_path=None):
+        """Init one of: 'glove', 'twitter', 'extvec', 'numberbatch', 'crawl', 'news', 'de-fasttext', 'de-numberbatch',
+        'sv-fasttext' or 'custom'.
+        Constructor downloads required files if not there.
+        If embeddings is equal to 'custom', you need to provide a path to your custom embeddings.
+        Custom embeddings should be correctly formatted to gensim.
+        """
 
         base_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/embeddings/'
 
@@ -183,6 +187,11 @@ class WordEmbeddings(TokenEmbeddings):
         if embeddings.lower() == 'sv-fasttext':
             cached_path(os.path.join(base_path, 'cc.sv.300.vectors.npy'), cache_dir='embeddings')
             embeddings = cached_path(os.path.join(base_path, 'cc.sv.300'), cache_dir='embeddings')
+
+        # custom embeddings
+        if embeddings.lower() == 'custom':
+            cached_path(embeddings_path, cache_dir='embeddings')
+            embeddings = cached_path(embeddings_path, cache_dir='embeddings')
 
         self.name = embeddings
         self.static_embeddings = True
