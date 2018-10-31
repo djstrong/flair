@@ -235,6 +235,8 @@ class LanguageModelTrainer:
                     output, rnn_output, hidden = self.model.forward(data, hidden)
 
                     # try to predict the targets
+                    #print(targets.size())
+                    #print(output.view(-1, ntokens).size())
                     loss = self.loss_function(output.view(-1, ntokens), targets)
                     loss.backward()
 

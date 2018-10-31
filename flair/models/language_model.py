@@ -32,7 +32,7 @@ class LanguageModel(nn.Module):
         self.encoder = nn.Embedding(len(dictionary), embedding_size)
 
         if nlayers == 1:
-            self.rnn = nn.LSTM(embedding_size, hidden_size, nlayers)
+            self.rnn = torch.nn.DataParallel(nn.LSTM(embedding_size, hidden_size, nlayers), dim=1)
         else:
             self.rnn = nn.LSTM(embedding_size, hidden_size, nlayers, dropout=dropout)
 
@@ -40,9 +40,9 @@ class LanguageModel(nn.Module):
 
         self.nout = nout
         if nout is not None:
-            self.proj = nn.Linear(hidden_size, nout)
+            self.proj = torch.nn.DataParallel(nn.Linear(hidden_size, nout), dim=1)
             self.initialize(self.proj.weight)
-            self.decoder = nn.Linear(nout, len(dictionary))
+            self.decoder = torch.nn.DataParallel(nn.Linear(nout, len(dictionary)), dim=1)
         else:
             self.proj = None
             self.decoder = nn.Linear(hidden_size, len(dictionary))
@@ -66,7 +66,7 @@ class LanguageModel(nn.Module):
         encoded = self.encoder(input)
         emb = self.drop(encoded)
 
-        self.rnn.flatten_parameters()
+        #self.rnn.module.flatten_parameters()
 
         output, hidden = self.rnn(emb, hidden)
 
@@ -130,6 +130,13 @@ class LanguageModel(nn.Module):
                                              state['embedding_size'],
                                              state['nout'],
                                              state['dropout'])
+        
+        #update names of lstm to DataParallel
+        for key in list(state['state_dict'].keys()):
+            if 'rnn' in key:
+                state['state_dict'][key.replace('rnn.','rnn.module.')]=state['state_dict'][key]
+                del state['state_dict'][key]
+        
         model.load_state_dict(state['state_dict'])
         model.eval()
         if torch.cuda.is_available():
