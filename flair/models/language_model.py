@@ -67,7 +67,7 @@ class LanguageModel(nn.Module):
         emb = self.drop(encoded)
 
         #self.rnn.module.flatten_parameters()
-
+        
         output, hidden = self.rnn(emb, hidden)
 
         if self.proj is not None:
@@ -133,7 +133,7 @@ class LanguageModel(nn.Module):
         
         #update names of lstm to DataParallel
         for key in list(state['state_dict'].keys()):
-            if 'rnn' in key:
+            if 'rnn' in key and 'rnn.module.' not in key:
                 state['state_dict'][key.replace('rnn.','rnn.module.')]=state['state_dict'][key]
                 del state['state_dict'][key]
         
