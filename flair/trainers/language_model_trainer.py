@@ -10,6 +10,9 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 from flair.data import Dictionary
 from flair.models import LanguageModel
 
+import torch.distributed as dist
+import torch.utils.data.distributed
+
 
 log = logging.getLogger(__name__)
 
@@ -169,7 +172,8 @@ class LanguageModelTrainer:
               anneal_factor: float = 0.25,
               patience: int = 10,
               clip=0.25,
-              max_epochs: int = 1000):
+              max_epochs: int = 1000,
+              start_split: int = 1):
 
         number_of_splits: int = len(self.corpus.train_files)
 
@@ -190,7 +194,7 @@ class LanguageModelTrainer:
             scheduler: ReduceLROnPlateau = ReduceLROnPlateau(optimizer, verbose=True, factor=anneal_factor,
                                                              patience=patience)
 
-            for split in range(1, max_splits + 1):
+            for split in range(start_split, max_splits + 1):
 
                 # after pass over all splits, increment epoch count
                 if (split - 1) % number_of_splits == 0:
@@ -235,8 +239,6 @@ class LanguageModelTrainer:
                     output, rnn_output, hidden = self.model.forward(data, hidden)
 
                     # try to predict the targets
-                    #print(targets.size())
-                    #print(output.view(-1, ntokens).size())
                     loss = self.loss_function(output.view(-1, ntokens), targets)
                     loss.backward()
 
@@ -277,13 +279,13 @@ class LanguageModelTrainer:
                 ###############################################################################
                 # print info
                 ###############################################################################
-                log.info('-' * 89)
+                log.info('-' * 118)
 
                 local_split_number = split % number_of_splits
                 if local_split_number == 0: local_split_number = number_of_splits
 
-                summary = '| end of split {:3d} /{:3d} | epoch {:3d} | time: {:5.2f}s | valid loss {:5.2f} | ' \
-                          'valid ppl {:8.2f} | learning rate {:3.2f}'.format(local_split_number,
+                summary = '| end of split {:3d} /{:3d} | epoch {:3d} | time: {:5.2f}s | valid loss {:5.3f} | ' \
+                          'valid ppl {:8.3f} | learning rate {:3.9f}'.format(local_split_number,
                                                                              number_of_splits,
                                                                              epoch,
                                                                              (time.time() - epoch_start_time),
@@ -295,10 +297,10 @@ class LanguageModelTrainer:
                     myfile.write('%s\n' % summary)
 
                 log.info(summary)
-                log.info('-' * 89)
+                log.info('-' * 118)
 
         except KeyboardInterrupt:
-            log.info('-' * 89)
+            log.info('-' * 118)
             log.info('Exiting from training early')
 
     def evaluate(self, data_source, eval_batch_size, sequence_length):
