@@ -1,3 +1,5 @@
+import re
+from subprocess import Popen, PIPE
 from typing import List, Dict, Union
 
 import torch
@@ -270,7 +272,7 @@ class Sentence:
     A Sentence is a list of Tokens and is used to represent a sentence or text fragment.
     """
 
-    def __init__(self, text: str = None, use_tokenizer: bool = False, labels: Union[List[Label], List[str]] = None):
+    def __init__(self, text: str = None, use_tokenizer: str = 'split', labels: Union[List[Label], List[str]] = None):
 
         super(Sentence, self).__init__()
 
@@ -285,7 +287,7 @@ class Sentence:
         if text is not None:
 
             # tokenize the text first if option selected
-            if use_tokenizer:
+            if use_tokenizer=='segtok':
 
                 # use segtok for tokenization
                 tokens = []
@@ -319,7 +321,7 @@ class Sentence:
                     last_token = token
 
             # otherwise assumes whitespace tokenized text
-            else:
+            elif use_tokenizer=='split':
                 # add each word in tokenized string as Token object to Sentence
                 offset = 0
                 for word in text.split(' '):
@@ -332,6 +334,23 @@ class Sentence:
                         token = Token(word, start_position=word_offset)
                         self.add_token(token)
                         offset += len(word) + 1
+            elif use_tokenizer=='toki':
+                cmd = ['toki-app', '-q', '-n', '-c', 'nkjp']
+                p = Popen(cmd, stdout=PIPE, stdin=PIPE, stderr=PIPE)
+                stdout = p.communicate(input=text.encode('utf-8'))[0]
+                offset=0
+                print(stdout.decode('utf-8').split('\n'))
+                for t in stdout.decode('utf-8').split('\n')[:-2]: #omit last two newlines
+                    print('XX', t)
+                    m = re.match(r'^(.*)/[tp]:(none|space|newline)', t)
+                    word=m.group(1)
+                    # before=m.group(2)
+                    # print(word, text)
+                    word_offset = text.index(word, offset)
+
+                    token = Token(word, start_position=word_offset)
+                    self.add_token(token)
+                    offset=word_offset+len(word)
 
     def get_token(self, token_id: int) -> Token:
         for token in self.tokens:
