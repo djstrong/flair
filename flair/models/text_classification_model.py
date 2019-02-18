@@ -99,14 +99,14 @@ class TextClassifier(flair.nn.Model):
         :param model_file: the model file
         :return: the loaded text classifier model
         """
-        state = TextClassifier._load_state(model_file)
+        state = cls._load_state(model_file)
 
-        model = TextClassifier(
+        model = cls(
             document_embeddings=state['document_embeddings'],
             label_dictionary=state['label_dictionary'],
             multi_label=state['multi_label']
         )
-        model.load_state_dict(state['state_dict'])
+        model.load_state_dict(state['state_dict'], strict=False)
         model.eval()
         model.to(flair.device)
 
@@ -114,8 +114,8 @@ class TextClassifier(flair.nn.Model):
 
     @classmethod
     def load_checkpoint(cls, model_file: Union[str, Path]):
-        state = TextClassifier._load_state(model_file)
-        model = TextClassifier.load_from_file(model_file)
+        state = cls._load_state(model_file)
+        model = cls.load_from_file(model_file)
 
         epoch = state['epoch'] if 'epoch' in state else None
         loss = state['loss'] if 'loss' in state else None
@@ -250,8 +250,8 @@ class TextClassifier(flair.nn.Model):
 
         return vec
 
-    @staticmethod
-    def load(model: str):
+    @classmethod
+    def load(cls, model: str):
         model_file = None
         aws_resource_path = 'https://s3.eu-central-1.amazonaws.com/alan-nlp/resources/models-v0.4'
         cache_dir = Path('models')
@@ -266,4 +266,4 @@ class TextClassifier(flair.nn.Model):
             model_file = cached_path(base_path, cache_dir=cache_dir)
 
         if model_file is not None:
-            return TextClassifier.load_from_file(model_file)
+            return cls.load_from_file(model_file)

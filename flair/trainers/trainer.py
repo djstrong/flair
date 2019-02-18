@@ -209,6 +209,8 @@ class ModelTrainer:
                         dev_score = dev_metric.micro_avg_accuracy()
                     elif evaluation_metric == EvaluationMetric.MACRO_F1_SCORE:
                         dev_score = dev_metric.macro_avg_f_score()
+                    elif evaluation_metric == EvaluationMetric.BINARY_F1_SCORE:
+                        dev_score = dev_metric.f_score(class_name='1')
                     else:
                         dev_score = dev_metric.micro_avg_f_score()
 
@@ -277,6 +279,7 @@ class ModelTrainer:
         test_metric, test_loss = self.evaluate(self.model, self.corpus.test, eval_mini_batch_size=eval_mini_batch_size,
                                                embeddings_in_memory=embeddings_in_memory)
 
+        log.info(f'BIANRY: f1-score {test_metric.f_score(class_name="1") }')
         log.info(f'MICRO_AVG: acc {test_metric.micro_avg_accuracy()} - f1-score {test_metric.micro_avg_f_score()}')
         log.info(f'MACRO_AVG: acc {test_metric.macro_avg_accuracy()} - f1-score {test_metric.macro_avg_f_score()}')
         for class_name in test_metric.get_classes():
@@ -305,6 +308,8 @@ class ModelTrainer:
             final_score = test_metric.micro_avg_accuracy()
         elif evaluation_metric == EvaluationMetric.MACRO_F1_SCORE:
             final_score = test_metric.macro_avg_f_score()
+        elif evaluation_metric == EvaluationMetric.BINARY_F1_SCORE:
+            final_score = test_metric.f_score(class_name='1')
         else:
             final_score = test_metric.micro_avg_f_score()
 
@@ -324,6 +329,9 @@ class ModelTrainer:
         if evaluation_metric == EvaluationMetric.MACRO_ACCURACY or evaluation_metric == EvaluationMetric.MACRO_F1_SCORE:
             f_score = metric.macro_avg_f_score()
             acc = metric.macro_avg_accuracy()
+        elif evaluation_metric == EvaluationMetric.BINARY_F1_SCORE:
+            f_score = metric.f_score(class_name='1')
+            acc = metric.accuracy(class_name='1')
         else:
             f_score = metric.micro_avg_f_score()
             acc = metric.micro_avg_accuracy()
