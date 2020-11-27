@@ -70,7 +70,7 @@ class Metric(object):
             return round(
                 self.get_tp(class_name)
                 / (self.get_tp(class_name) + self.get_fp(class_name)),
-                4,
+                5,
             )
         return 0.0
 
@@ -79,7 +79,7 @@ class Metric(object):
             return round(
                 self.get_tp(class_name)
                 / (self.get_tp(class_name) + self.get_fn(class_name)),
-                4,
+                5,
             )
         return 0.0
 
@@ -89,7 +89,7 @@ class Metric(object):
                 (1 + self.beta*self.beta)
                 * (self.precision(class_name) * self.recall(class_name))
                 / (self.precision(class_name) * self.beta*self.beta + self.recall(class_name)),
-                4,
+                5,
             )
         return 0.0
 
@@ -105,7 +105,7 @@ class Metric(object):
                     + self.get_fp(class_name)
                     + self.get_fn(class_name)
                 ),
-                4,
+                5,
             )
         return 0.0
 
