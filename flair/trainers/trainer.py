@@ -225,6 +225,7 @@ class ModelTrainer:
             patience=patience,
             mode=anneal_mode,
             verbose=True,
+            threshold=1e-5
         )
 
         train_data = self.corpus.train
